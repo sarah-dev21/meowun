@@ -11,27 +11,32 @@
   
   <title>묘운 MEOWUN</title>
   
-  <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
-  
-  <!-- iOS 아이콘 -->
   <link rel="apple-touch-icon" href="icon.svg">
-  
-  <!-- 파비콘 -->
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   
+  <!-- 카카오 SDK -->
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.5.0/kakao.min.js"></script>
+  
+  <!-- html2canvas (이미지 저장용) -->
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  
+  <!-- 쿠팡파트너스 -->
+  <script src="https://ads-partners.coupang.com/g.js" async></script>
+  
   <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&display=swap" rel="stylesheet">
+  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
     html, body {
       height: 100%;
       overflow: hidden;
+      font-family: 'Gaegu', cursive;
     }
     
     body {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
-      /* iOS 안전 영역 대응 */
+      background: linear-gradient(180deg, #13102a 0%, #1a1a2e 50%, #0d0d1a 100%);
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
     
@@ -43,19 +48,36 @@
       0%, 100% { opacity: 0.3; }
       50% { opacity: 1; }
     }
+    
     @keyframes float {
       0%, 100% { transform: translateY(0px); }
       50% { transform: translateY(-10px); }
     }
     
-    /* 스크롤바 숨기기 */
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
     ::-webkit-scrollbar {
       display: none;
     }
     
-    /* 터치 하이라이트 제거 */
     * {
       -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* 모바일 입력 필드 스타일 */
+    input[type="text"],
+    input[type="number"],
+    input[type="tel"],
+    select {
+      font-size: 16px !important; /* iOS 확대 방지 */
     }
   </style>
 </head>
@@ -65,112 +87,100 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script type="text/babel">
-    const { useState } = React;
+    const { useState, useEffect, useRef } = React;
 
-    // 망토 쓴 검은 고양이 캐릭터 컴포넌트 - 동글동글 폭신한 스타일
+    // 카카오 초기화
+    const KAKAO_KEY = 'a8f98dbc00e769be2ba0943380509ac0';
+
+    // 쿠팡파트너스 배너 초기화
+    const initCoupangBanner = () => {
+      const banner = document.getElementById('coupang-banner');
+      if (banner && window.PartnersCoupang) {
+        new window.PartnersCoupang.G({
+          id: 800931,
+          trackingCode: "AF6702889",
+          subId: null,
+          template: "carousel",
+          width: "100%",
+          height: "140"
+        });
+      }
+    };
+
+    // 망토 쓴 검은 고양이 캐릭터 컴포넌트
     const MeowunCat = ({ size = 100, style = {} }) => (
       <svg width={size} height={size} viewBox="0 0 100 100" style={style}>
         <defs>
-          {/* 망토 그라데이션 */}
           <linearGradient id="capeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#5a1a8a" />
-            <stop offset="100%" stopColor="#2a0a4a" />
+            <stop offset="0%" stopColor="#6b21a8" />
+            <stop offset="100%" stopColor="#3b0764" />
           </linearGradient>
-          {/* 금색 눈 그라데이션 */}
           <radialGradient id="eyeGold" cx="50%" cy="30%" r="60%">
-            <stop offset="0%" stopColor="#ffe066" />
-            <stop offset="50%" stopColor="#ffc700" />
-            <stop offset="100%" stopColor="#b8960b" />
+            <stop offset="0%" stopColor="#fde047" />
+            <stop offset="50%" stopColor="#facc15" />
+            <stop offset="100%" stopColor="#ca8a04" />
           </radialGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
         </defs>
         
-        {/* 망토 - 뒤쪽 */}
-        <ellipse cx="50" cy="75" rx="38" ry="22" fill="url(#capeGradient)" />
-        <path
-          d="M12 65 Q8 75 15 90 Q30 98 50 98 Q70 98 85 90 Q92 75 88 65 Q75 55 50 58 Q25 55 12 65"
-          fill="url(#capeGradient)"
-        />
+        {/* 망토 */}
+        <ellipse cx="50" cy="78" rx="40" ry="20" fill="url(#capeGradient)" />
+        <path d="M10 65 Q5 78 15 92 Q30 100 50 100 Q70 100 85 92 Q95 78 90 65 Q75 52 50 56 Q25 52 10 65" fill="url(#capeGradient)" />
+        
         {/* 망토 별 장식 */}
-        <circle cx="22" cy="78" r="1.5" fill="#ffd700" opacity="0.9" />
-        <circle cx="78" cy="76" r="1.2" fill="#ffd700" opacity="0.8" />
-        <circle cx="30" cy="88" r="1" fill="#ffd700" opacity="0.7" />
-        <circle cx="70" cy="86" r="1.3" fill="#ffd700" opacity="0.8" />
-        <circle cx="50" cy="92" r="1" fill="#ffd700" opacity="0.6" />
-        <circle cx="40" cy="82" r="0.8" fill="#ffd700" opacity="0.5" />
-        <circle cx="62" cy="80" r="1" fill="#ffd700" opacity="0.7" />
+        <circle cx="20" cy="80" r="1.5" fill="#fde047" opacity="0.9" />
+        <circle cx="80" cy="78" r="1.2" fill="#fde047" opacity="0.8" />
+        <circle cx="30" cy="90" r="1" fill="#fde047" opacity="0.7" />
+        <circle cx="70" cy="88" r="1.3" fill="#fde047" opacity="0.8" />
+        <circle cx="50" cy="94" r="1.2" fill="#fde047" opacity="0.6" />
         
-        {/* 얼굴 - 동글동글 폭신하게 */}
-        <ellipse cx="50" cy="42" rx="32" ry="30" fill="#2a2a2a" />
-        {/* 얼굴 하이라이트 (폭신한 느낌) */}
-        <ellipse cx="50" cy="38" rx="28" ry="24" fill="#1f1f1f" />
+        {/* 얼굴 */}
+        <ellipse cx="50" cy="42" rx="34" ry="32" fill="#1f1f1f" />
+        <ellipse cx="50" cy="38" rx="30" ry="26" fill="#171717" />
         
-        {/* 왼쪽 귀 - 동글하게 */}
-        <ellipse cx="24" cy="18" rx="10" ry="14" fill="#2a2a2a" />
-        <ellipse cx="24" cy="18" rx="7" ry="10" fill="#1f1f1f" />
-        {/* 귀 안쪽 */}
-        <ellipse cx="24" cy="20" rx="4" ry="6" fill="#3d3d3d" opacity="0.5" />
+        {/* 귀 */}
+        <ellipse cx="22" cy="16" rx="11" ry="16" fill="#1f1f1f" />
+        <ellipse cx="22" cy="16" rx="8" ry="12" fill="#171717" />
+        <ellipse cx="22" cy="18" rx="4" ry="6" fill="#2d2d2d" opacity="0.5" />
         
-        {/* 오른쪽 귀 - 동글하게 */}
-        <ellipse cx="76" cy="18" rx="10" ry="14" fill="#2a2a2a" />
-        <ellipse cx="76" cy="18" rx="7" ry="10" fill="#1f1f1f" />
-        {/* 귀 안쪽 */}
-        <ellipse cx="76" cy="20" rx="4" ry="6" fill="#3d3d3d" opacity="0.5" />
+        <ellipse cx="78" cy="16" rx="11" ry="16" fill="#1f1f1f" />
+        <ellipse cx="78" cy="16" rx="8" ry="12" fill="#171717" />
+        <ellipse cx="78" cy="18" rx="4" ry="6" fill="#2d2d2d" opacity="0.5" />
         
-        {/* 왼쪽 눈 - 크고 동그란 금색 눈 */}
-        <ellipse cx="35" cy="40" rx="12" ry="13" fill="url(#eyeGold)" stroke="#8b7500" strokeWidth="1.5" />
-        {/* 눈동자 */}
-        <ellipse cx="35" cy="42" rx="5" ry="7" fill="#1a1a1a" />
-        {/* 하이라이트 */}
-        <ellipse cx="32" cy="37" rx="3" ry="4" fill="#fff" opacity="0.9" />
-        <circle cx="38" cy="45" r="1.5" fill="#fff" opacity="0.5" />
+        {/* 눈 */}
+        <ellipse cx="35" cy="40" rx="13" ry="14" fill="url(#eyeGold)" stroke="#a16207" strokeWidth="1.5" filter="url(#glow)" />
+        <ellipse cx="35" cy="42" rx="5" ry="8" fill="#0f0f0f" />
+        <ellipse cx="32" cy="36" rx="4" ry="5" fill="#fff" opacity="0.95" />
+        <circle cx="38" cy="46" r="2" fill="#fff" opacity="0.5" />
         
-        {/* 오른쪽 눈 - 크고 동그란 금색 눈 */}
-        <ellipse cx="65" cy="40" rx="12" ry="13" fill="url(#eyeGold)" stroke="#8b7500" strokeWidth="1.5" />
-        {/* 눈동자 */}
-        <ellipse cx="65" cy="42" rx="5" ry="7" fill="#1a1a1a" />
-        {/* 하이라이트 */}
-        <ellipse cx="62" cy="37" rx="3" ry="4" fill="#fff" opacity="0.9" />
-        <circle cx="68" cy="45" r="1.5" fill="#fff" opacity="0.5" />
+        <ellipse cx="65" cy="40" rx="13" ry="14" fill="url(#eyeGold)" stroke="#a16207" strokeWidth="1.5" filter="url(#glow)" />
+        <ellipse cx="65" cy="42" rx="5" ry="8" fill="#0f0f0f" />
+        <ellipse cx="62" cy="36" rx="4" ry="5" fill="#fff" opacity="0.95" />
+        <circle cx="68" cy="46" r="2" fill="#fff" opacity="0.5" />
         
-        {/* 코 - 작은 역삼각형 */}
-        <path
-          d="M50 52 L47 56 L53 56 Z"
-          fill="#3d3d3d"
-        />
+        {/* 코 */}
+        <path d="M50 52 L46 57 L54 57 Z" fill="#404040" />
         
         {/* 입 */}
-        <path
-          d="M50 56 L50 59"
-          fill="none"
-          stroke="#3d3d3d"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M44 61 Q47 58 50 59 Q53 58 56 61"
-          fill="none"
-          stroke="#3d3d3d"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
+        <path d="M50 57 L50 60" fill="none" stroke="#404040" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M43 62 Q47 58 50 60 Q53 58 57 62" fill="none" stroke="#404040" strokeWidth="1.5" strokeLinecap="round" />
         
-        {/* 수염 - 하얀색으로 */}
-        <line x1="8" y1="48" x2="28" y2="52" stroke="#e0e0e0" strokeWidth="1.2" strokeLinecap="round" />
-        <line x1="6" y1="54" x2="27" y2="54" stroke="#e0e0e0" strokeWidth="1.2" strokeLinecap="round" />
-        <line x1="8" y1="60" x2="28" y2="56" stroke="#e0e0e0" strokeWidth="1.2" strokeLinecap="round" />
-        <line x1="92" y1="48" x2="72" y2="52" stroke="#e0e0e0" strokeWidth="1.2" strokeLinecap="round" />
-        <line x1="94" y1="54" x2="73" y2="54" stroke="#e0e0e0" strokeWidth="1.2" strokeLinecap="round" />
-        <line x1="92" y1="60" x2="72" y2="56" stroke="#e0e0e0" strokeWidth="1.2" strokeLinecap="round" />
+        {/* 수염 */}
+        <line x1="5" y1="46" x2="28" y2="50" stroke="#d4d4d4" strokeWidth="1" strokeLinecap="round" />
+        <line x1="3" y1="52" x2="27" y2="52" stroke="#d4d4d4" strokeWidth="1" strokeLinecap="round" />
+        <line x1="5" y1="58" x2="28" y2="54" stroke="#d4d4d4" strokeWidth="1" strokeLinecap="round" />
+        <line x1="95" y1="46" x2="72" y2="50" stroke="#d4d4d4" strokeWidth="1" strokeLinecap="round" />
+        <line x1="97" y1="52" x2="73" y2="52" stroke="#d4d4d4" strokeWidth="1" strokeLinecap="round" />
+        <line x1="95" y1="58" x2="72" y2="54" stroke="#d4d4d4" strokeWidth="1" strokeLinecap="round" />
         
-        {/* 망토 브로치 (별) */}
-        <polygon
-          points="50,62 52,67 58,67 53,71 55,77 50,73 45,77 47,71 42,67 48,67"
-          fill="#ffd700"
-          stroke="#b8860b"
-          strokeWidth="0.8"
-        />
-        {/* 브로치 하이라이트 */}
-        <circle cx="48" cy="68" r="1" fill="#fff" opacity="0.6" />
+        {/* 브로치 */}
+        <polygon points="50,60 52,66 59,66 54,70 56,77 50,72 44,77 46,70 41,66 48,66" fill="#fde047" stroke="#ca8a04" strokeWidth="0.8" filter="url(#glow)" />
       </svg>
     );
 
@@ -179,12 +189,8 @@
       const getSavedUserData = () => {
         try {
           const saved = localStorage.getItem('meowun_user');
-          if (saved) {
-            return JSON.parse(saved);
-          }
-        } catch (e) {
-          console.error('저장된 데이터 불러오기 실패:', e);
-        }
+          if (saved) return JSON.parse(saved);
+        } catch (e) {}
         return null;
       };
 
@@ -193,61 +199,63 @@
       const [screen, setScreen] = useState(savedUser ? 'main' : 'splash');
       const [userData, setUserData] = useState(savedUser || {
         name: '',
-        birthDate: '',
-        birthTime: '',
+        birthYear: '',
+        birthMonth: '',
+        birthDay: '',
+        birthHour: '',
       });
       const [showShareCard, setShowShareCard] = useState(false);
       const [showMyPage, setShowMyPage] = useState(false);
+      const [isEditing, setIsEditing] = useState(false);
       const [todayFortune, setTodayFortune] = useState(null);
       const [isLoading, setIsLoading] = useState(savedUser ? true : false);
+      const shareCardRef = useRef(null);
 
-      // 저장된 사용자가 있으면 바로 운세 불러오기
-      React.useEffect(() => {
+      useEffect(() => {
         if (savedUser && !todayFortune) {
           fetchFortune(savedUser);
         }
+        // 카카오 SDK 초기화
+        if (window.Kakao && !window.Kakao.isInitialized()) {
+          window.Kakao.init(KAKAO_KEY);
+        }
       }, []);
 
-      // 사용자 정보 저장
+      // 메인 화면 진입 시 쿠팡 배너 초기화
+      useEffect(() => {
+        if (screen === 'main' && !isLoading) {
+          setTimeout(initCoupangBanner, 500);
+        }
+      }, [screen, isLoading]);
+
       const saveUserData = (data) => {
         try {
           localStorage.setItem('meowun_user', JSON.stringify(data));
-        } catch (e) {
-          console.error('데이터 저장 실패:', e);
-        }
+        } catch (e) {}
       };
 
-      // 사주 기반 운세 생성 (API 없이)
+      // 사주 기반 운세 생성
       const generateFortune = (userInfo) => {
-        // 생년월일에서 숫자 추출
-        const birthDate = new Date(userInfo.birthDate);
+        const birthYear = parseInt(userInfo.birthYear) || 2000;
+        const birthMonth = parseInt(userInfo.birthMonth) || 1;
+        const birthDay = parseInt(userInfo.birthDay) || 1;
         const today = new Date();
-        
-        // 사주 요소 계산 (간단한 버전)
-        const birthYear = birthDate.getFullYear();
-        const birthMonth = birthDate.getMonth() + 1;
-        const birthDay = birthDate.getDate();
         const todayDate = today.getDate();
         const todayMonth = today.getMonth() + 1;
         
-        // 천간 (10개)
         const heavenlyStems = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
-        // 지지 (12개)
         const earthlyBranches = ['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'];
-        // 오행
         const fiveElements = ['목', '화', '토', '금', '수'];
         
         const yearStem = heavenlyStems[(birthYear - 4) % 10];
         const yearBranch = earthlyBranches[(birthYear - 4) % 12];
         const userElement = fiveElements[(birthYear - 4) % 5];
         
-        // 오늘의 운세 시드 (날짜 + 생년월일 조합)
         const seed = (birthYear + birthMonth + birthDay + todayDate + todayMonth) % 100;
         
-        // 별점 계산 (0.5 단위)
         const calcRating = (base) => {
           const raw = ((seed + base) % 9) / 2 + 1;
-          return Math.round(raw * 2) / 2; // 0.5 단위로 반올림
+          return Math.round(raw * 2) / 2;
         };
         
         const overall = calcRating(0);
@@ -256,7 +264,6 @@
         const health = calcRating(47);
         const work = calcRating(61);
         
-        // 운세 메시지 풀
         const overallMessages = [
           "오늘은 우주가 너한테 관심 있대.\n뭘 해도 될 것 같은 날이야.\n근데 너무 설치진 마.",
           "평범한 하루가 될 거야.\n근데 그게 나쁜 건 아니잖아.\n조용히 네 할 일 해.",
@@ -269,71 +276,57 @@
         ];
         
         const loveMessages = [
-          "누가 널 보고 있긴 해... 근데 네가 눈치가 없어서 문제지.",
+          "누가 널 보고 있긴 해... 눈치 챙겨.",
           "오늘은 연애운 괜찮아. 용기 내봐.",
-          "솔로가 편한 날도 있는 거야. 오늘이 그날.",
-          "짝사랑 중이면 오늘 찬스야. 말 걸어봐.",
+          "솔로가 편한 날도 있어. 오늘이 그날.",
+          "짝사랑 중이면 오늘 찬스야.",
           "커플이면 싸우지 마. 별이 안 좋아.",
-          "새로운 만남의 기운이 있어. 밖에 나가봐.",
+          "새로운 만남의 기운이 있어.",
           "오늘은 혼자 있는 게 나을 듯.",
           "관계에서 솔직해지면 좋은 일 생겨."
         ];
         
         const moneyMessages = [
-          "돈 쓰지 마. 오늘 네 지갑은 우주의 블랙홀이야.",
-          "작은 횡재 가능성 있어. 영수증 확인해봐.",
+          "돈 쓰지 마. 지갑이 블랙홀이야.",
+          "작은 횡재 가능성 있어.",
           "투자는 오늘 말고. 제발.",
-          "돈 들어올 기운 있어. 근데 나가는 것도 있어.",
-          "아끼는 게 버는 거야. 오늘은 절약 모드.",
+          "돈 들어올 기운 있어.",
+          "아끼는 게 버는 거야.",
           "금전운 좋아. 밀린 돈 받을 수도?",
           "충동구매 주의. 별이 경고해.",
-          "필요한 것만 사. 원하는 건 나중에."
+          "필요한 것만 사."
         ];
         
         const healthMessages = [
-          "좀 쉬어. 우주도 쉬는데 넌 왜 안 쉬어?",
+          "좀 쉬어. 우주도 쉬잖아.",
           "물 많이 마셔. 기본이 중요해.",
-          "오늘 컨디션 좋을 거야. 운동하기 딱 좋아.",
-          "무리하지 마. 네 몸이 신호 보내고 있어.",
-          "스트레칭 좀 해. 뻣뻣하잖아.",
-          "잠을 충분히 자. 수면이 보약이야.",
+          "오늘 컨디션 좋을 거야.",
+          "무리하지 마. 몸이 신호 보내.",
+          "스트레칭 좀 해.",
+          "잠을 충분히 자.",
           "건강운 좋아. 활력 넘칠 듯.",
           "과식 주의. 위장이 예민해."
         ];
         
         const workMessages = [
-          "급한 일 없으면 천천히 해. 실수 줄어.",
-          "오늘 집중력 좋아. 어려운 일 오늘 해치워.",
-          "회의에서 의견 내봐. 좋은 반응 있을 듯.",
+          "급한 일 없으면 천천히.",
+          "오늘 집중력 좋아. 어려운 일 해치워.",
+          "회의에서 의견 내봐.",
           "동료한테 잘해. 도움받을 일 생겨.",
-          "야근 피해. 효율 안 나오는 날이야.",
+          "야근 피해. 효율 안 나와.",
           "새 프로젝트 시작하기 좋아.",
-          "상사 눈에 들 수 있어. 열심히 하는 척해.",
-          "실수해도 괜찮아. 만회할 기회 와."
+          "상사 눈에 들 수 있어.",
+          "실수해도 괜찮아. 만회 기회 와."
         ];
         
-        const luckyItems = [
-          "따뜻한 차", "파란색 펜", "동전", "손거울", 
-          "이어폰", "사탕", "열쇠고리", "손수건",
-          "립밤", "머리끈", "스티커", "영수증",
-          "동그란 물건", "네잎클로버 사진", "고양이 굿즈"
-        ];
+        const luckyItems = ["따뜻한 차", "파란색 펜", "동전", "손거울", "이어폰", "사탕", "열쇠고리", "손수건", "립밤", "머리끈", "스티커", "고양이 굿즈", "보라색 물건", "별 모양 악세서리", "향기 나는 것"];
         
-        const luckyColors = [
-          "보라색", "남색", "하늘색", "민트색",
-          "분홍색", "살구색", "노란색", "연두색",
-          "회색", "검정색", "흰색", "금색"
-        ];
+        const luckyColors = ["보라색", "남색", "하늘색", "민트색", "분홍색", "살구색", "노란색", "연두색", "회색", "검정색", "흰색", "금색"];
         
-        // 시드 기반으로 메시지 선택
         const pickMessage = (arr, offset) => arr[(seed + offset) % arr.length];
         
         return {
-          overall,
-          love,
-          money,
-          health,
-          work,
+          overall, love, money, health, work,
           message: pickMessage(overallMessages, 0),
           detail: {
             love: pickMessage(loveMessages, 11),
@@ -348,60 +341,145 @@
         };
       };
 
-      // 운세 가져오기 (로컬 생성)
       const fetchFortune = async (userInfo) => {
         setIsLoading(true);
-        
-        // 로딩 효과를 위한 딜레이
         await new Promise(resolve => setTimeout(resolve, 1500));
-        
         const fortune = generateFortune(userInfo);
         setTodayFortune(fortune);
         setIsLoading(false);
       };
 
-      // 온보딩 완료 후 운세 가져오기
       const handleOnboardingComplete = async (userInfo) => {
         setUserData(userInfo);
-        saveUserData(userInfo); // localStorage에 저장
+        saveUserData(userInfo);
         setScreen('main');
         await fetchFortune(userInfo);
       };
 
-      const StarRating = ({ rating, max = 5 }) => (
-        <div style={{ display: 'flex', gap: '2px' }}>
-          {[...Array(max)].map((_, i) => {
-            const starValue = i + 1;
-            let fillPercentage = 0;
-            
-            if (rating >= starValue) {
-              fillPercentage = 100;
-            } else if (rating >= starValue - 0.5) {
-              fillPercentage = 50;
-            }
-            
-            return (
-              <div key={i} style={{ position: 'relative', width: '20px', height: '20px' }}>
-                {/* 빈 별 (회색) */}
-                <span style={{ 
-                  fontSize: '18px',
-                  filter: 'grayscale(1) opacity(0.3)',
-                  position: 'absolute',
-                }}>
-                  ⭐
-                </span>
-                {/* 채워진 별 */}
-                <div style={{
-                  position: 'absolute',
-                  width: `${fillPercentage}%`,
-                  overflow: 'hidden',
-                }}>
-                  <span style={{ fontSize: '18px' }}>⭐</span>
+      const handleUpdateUserData = async (newData) => {
+        setUserData(newData);
+        saveUserData(newData);
+        setIsEditing(false);
+        await fetchFortune(newData);
+      };
+
+      // 카카오톡 공유
+      const shareToKakao = () => {
+        if (!window.Kakao || !window.Kakao.isInitialized()) {
+          alert('카카오톡 공유 기능을 사용하려면 카카오 개발자 등록이 필요해요!');
+          return;
+        }
+        
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: '🐱 묘운이가 본 오늘의 운세',
+            description: todayFortune?.message?.replace(/\n/g, ' ') || '오늘의 운세를 확인해보세요!',
+            imageUrl: 'https://your-domain.com/icon.svg',
+            link: {
+              mobileWebUrl: window.location.href,
+              webUrl: window.location.href,
+            },
+          },
+          buttons: [
+            {
+              title: '내 운세 보러가기',
+              link: {
+                mobileWebUrl: window.location.href,
+                webUrl: window.location.href,
+              },
+            },
+          ],
+        });
+      };
+
+      // 이미지 저장
+      const saveAsImage = async () => {
+        if (!shareCardRef.current) return;
+        
+        try {
+          const canvas = await html2canvas(shareCardRef.current, {
+            backgroundColor: '#13102a',
+            scale: 2,
+          });
+          
+          const link = document.createElement('a');
+          link.download = `meowun_${new Date().toISOString().split('T')[0]}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        } catch (e) {
+          alert('이미지 저장에 실패했어요. 다시 시도해주세요!');
+        }
+      };
+
+      // 별점 컴포넌트
+      const StarRating = ({ rating, max = 5, size = 'normal' }) => {
+        const starSize = size === 'small' ? '14px' : '18px';
+        return (
+          <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
+            {[...Array(max)].map((_, i) => {
+              const starValue = i + 1;
+              let fillPercentage = 0;
+              if (rating >= starValue) fillPercentage = 100;
+              else if (rating >= starValue - 0.5) fillPercentage = 50;
+              
+              return (
+                <div key={i} style={{ position: 'relative', width: starSize, height: starSize }}>
+                  <span style={{ fontSize: starSize, filter: 'grayscale(1) opacity(0.3)', position: 'absolute' }}>⭐</span>
+                  <div style={{ position: 'absolute', width: `${fillPercentage}%`, overflow: 'hidden' }}>
+                    <span style={{ fontSize: starSize }}>⭐</span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+            <span style={{ 
+              marginLeft: '6px', 
+              fontSize: size === 'small' ? '12px' : '14px', 
+              color: '#a78bfa',
+              fontWeight: '700'
+            }}>
+              {rating}
+            </span>
+          </div>
+        );
+      };
+
+      // 숫자 입력 컴포넌트
+      const NumberInput = ({ value, onChange, placeholder, maxLength, min, max }) => (
+        <input
+          type="tel"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={value}
+          onChange={(e) => {
+            const val = e.target.value.replace(/[^0-9]/g, '');
+            if (maxLength && val.length > maxLength) return;
+            if (max && parseInt(val) > max) return;
+            onChange(val);
+          }}
+          placeholder={placeholder}
+          style={{
+            width: '100%',
+            padding: '16px',
+            fontSize: '18px',
+            fontFamily: '"Gaegu", cursive',
+            background: 'rgba(139, 92, 246, 0.1)',
+            border: '2px solid rgba(139, 92, 246, 0.3)',
+            borderRadius: '16px',
+            color: '#f5f5f5',
+            outline: 'none',
+            textAlign: 'center',
+            transition: 'all 0.2s',
+          }}
+          onFocus={(e) => {
+            e.target.style.borderColor = '#a78bfa';
+            e.target.style.background = 'rgba(139, 92, 246, 0.2)';
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+            e.target.style.background = 'rgba(139, 92, 246, 0.1)';
+          }}
+        />
       );
 
       // 스플래시 화면
@@ -412,18 +490,19 @@
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)',
+          background: 'linear-gradient(180deg, #13102a 0%, #1e1b4b 50%, #0f0f1a 100%)',
           position: 'relative',
           overflow: 'hidden',
+          padding: '20px',
         }}>
           {/* 별 배경 */}
           <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-            {[...Array(30)].map((_, i) => (
+            {[...Array(40)].map((_, i) => (
               <div key={i} style={{
                 position: 'absolute',
                 width: Math.random() * 3 + 1 + 'px',
                 height: Math.random() * 3 + 1 + 'px',
-                background: '#fff',
+                background: i % 3 === 0 ? '#a78bfa' : '#fff',
                 borderRadius: '50%',
                 left: Math.random() * 100 + '%',
                 top: Math.random() * 100 + '%',
@@ -433,73 +512,59 @@
             ))}
           </div>
 
-          {/* 고양이 캐릭터 */}
-          <div style={{
-            marginBottom: '20px',
-            filter: 'drop-shadow(0 0 20px rgba(147, 112, 219, 0.5))',
-            animation: 'float 3s ease-in-out infinite',
-          }}>
-            <MeowunCat size={140} />
+          <div style={{ animation: 'float 3s ease-in-out infinite', marginBottom: '24px' }}>
+            <MeowunCat size={160} />
           </div>
 
-          {/* 로고 */}
           <div style={{
-            fontFamily: '"Gaegu", cursive',
-            fontSize: '48px',
-            color: '#f5e6d3',
-            textShadow: '2px 2px 0 #4a0080, -1px -1px 0 #9370db',
-            letterSpacing: '4px',
+            fontSize: '52px',
+            color: '#f5f5f5',
+            textShadow: '0 0 30px rgba(167, 139, 250, 0.5)',
+            letterSpacing: '6px',
             marginBottom: '8px',
+            fontWeight: '700',
           }}>
             묘운
           </div>
           <div style={{
-            fontFamily: '"Gaegu", cursive',
-            fontSize: '20px',
-            color: '#9370db',
-            letterSpacing: '6px',
-            marginBottom: '40px',
+            fontSize: '18px',
+            color: '#a78bfa',
+            letterSpacing: '8px',
+            marginBottom: '16px',
+            fontWeight: '400',
           }}>
             MEOWUN
           </div>
 
           <div style={{
-            fontFamily: '"Gaegu", cursive',
             fontSize: '16px',
-            color: '#a0a0a0',
+            color: '#94a3b8',
             textAlign: 'center',
-            lineHeight: 1.6,
-            marginBottom: '40px',
+            lineHeight: 1.8,
+            marginBottom: '48px',
           }}>
-            까칠한 우주 고양이가 전하는<br />오늘의 운세
+            까칠한 우주 고양이가 전하는<br />오늘의 운세 ✨
           </div>
 
           <button
             onClick={() => setScreen('onboarding')}
             style={{
-              fontFamily: '"Gaegu", cursive',
               fontSize: '20px',
-              padding: '16px 48px',
-              background: 'linear-gradient(135deg, #9370db 0%, #4a0080 100%)',
+              padding: '18px 56px',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
               color: '#fff',
               border: 'none',
-              borderRadius: '30px',
+              borderRadius: '50px',
               cursor: 'pointer',
-              boxShadow: '0 4px 20px rgba(147, 112, 219, 0.4)',
-              transition: 'transform 0.2s, box-shadow 0.2s',
+              boxShadow: '0 8px 32px rgba(139, 92, 246, 0.4)',
+              fontFamily: '"Gaegu", cursive',
+              fontWeight: '700',
               position: 'relative',
               zIndex: 10,
-            }}
-            onMouseOver={(e) => {
-              e.target.style.transform = 'scale(1.05)';
-              e.target.style.boxShadow = '0 6px 30px rgba(147, 112, 219, 0.6)';
-            }}
-            onMouseOut={(e) => {
-              e.target.style.transform = 'scale(1)';
-              e.target.style.boxShadow = '0 4px 20px rgba(147, 112, 219, 0.4)';
+              transition: 'all 0.3s',
             }}
           >
-            시작하기
+            시작하기 🌙
           </button>
         </div>
       );
@@ -510,11 +575,14 @@
         const [localData, setLocalData] = useState({ ...userData });
 
         const handleNext = () => {
-          if (step < 3) {
-            setStep(step + 1);
-          } else {
-            handleOnboardingComplete(localData);
-          }
+          if (step < 3) setStep(step + 1);
+          else handleOnboardingComplete(localData);
+        };
+
+        const canProceed = () => {
+          if (step === 1) return localData.name?.length > 0;
+          if (step === 2) return localData.birthYear && localData.birthMonth && localData.birthDay;
+          return true;
         };
 
         return (
@@ -522,49 +590,40 @@
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
-            padding: '40px 24px',
+            background: 'linear-gradient(180deg, #13102a 0%, #1e1b4b 100%)',
+            padding: '24px',
+            paddingTop: 'max(24px, env(safe-area-inset-top))',
           }}>
             {/* 진행 표시 */}
-            <div style={{
-              display: 'flex',
-              gap: '8px',
-              marginBottom: '40px',
-              justifyContent: 'center',
-            }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', justifyContent: 'center' }}>
               {[1, 2, 3].map(i => (
                 <div key={i} style={{
-                  width: i === step ? '24px' : '8px',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: i <= step ? '#9370db' : '#333',
+                  width: i === step ? '32px' : '10px',
+                  height: '10px',
+                  borderRadius: '5px',
+                  background: i <= step ? 'linear-gradient(90deg, #8b5cf6, #a78bfa)' : 'rgba(255,255,255,0.2)',
                   transition: 'all 0.3s',
                 }} />
               ))}
             </div>
 
             {/* 고양이 말풍선 */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '12px',
-              marginBottom: '32px',
-            }}>
-              <MeowunCat size={56} />
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '32px' }}>
+              <MeowunCat size={60} />
               <div style={{
-                fontFamily: '"Gaegu", cursive',
-                fontSize: '18px',
-                color: '#f5e6d3',
-                background: 'rgba(147, 112, 219, 0.2)',
+                fontSize: '17px',
+                color: '#f5f5f5',
+                background: 'rgba(139, 92, 246, 0.15)',
                 padding: '16px 20px',
                 borderRadius: '4px 20px 20px 20px',
-                lineHeight: 1.6,
-                border: '2px solid rgba(147, 112, 219, 0.3)',
+                lineHeight: 1.7,
+                border: '1px solid rgba(139, 92, 246, 0.3)',
                 whiteSpace: 'pre-line',
+                flex: 1,
               }}>
-                {step === 1 && "...왔어? 이름이 뭐야?\n대충 알려줘. 별 볼 때 필요하거든."}
-                {step === 2 && "생년월일... 알려줘.\n사주 보려면 필요해."}
-                {step === 3 && "태어난 시간도 알아?\n모르면 대충 넣어도 돼.\n...근데 정확할수록 좋긴 해."}
+                {step === 1 && "...왔어? 이름이 뭐야?\n별 볼 때 필요하거든."}
+                {step === 2 && "생년월일 알려줘.\n사주 보려면 필요해."}
+                {step === 3 && "태어난 시간도 알아?\n모르면 비워둬도 돼."}
               </div>
             </div>
 
@@ -572,13 +631,7 @@
             <div style={{ flex: 1 }}>
               {step === 1 && (
                 <div>
-                  <label style={{
-                    fontFamily: '"Gaegu", cursive',
-                    fontSize: '16px',
-                    color: '#9370db',
-                    marginBottom: '8px',
-                    display: 'block',
-                  }}>이름</label>
+                  <label style={{ fontSize: '15px', color: '#a78bfa', marginBottom: '12px', display: 'block' }}>이름</label>
                   <input
                     type="text"
                     value={localData.name}
@@ -586,15 +639,14 @@
                     placeholder="이름을 입력해줘"
                     style={{
                       width: '100%',
-                      padding: '16px',
+                      padding: '18px',
                       fontSize: '18px',
                       fontFamily: '"Gaegu", cursive',
-                      background: 'rgba(255,255,255,0.1)',
-                      border: '2px dashed #9370db',
-                      borderRadius: '12px',
-                      color: '#f5e6d3',
+                      background: 'rgba(139, 92, 246, 0.1)',
+                      border: '2px solid rgba(139, 92, 246, 0.3)',
+                      borderRadius: '16px',
+                      color: '#f5f5f5',
                       outline: 'none',
-                      boxSizing: 'border-box',
                     }}
                   />
                 </div>
@@ -602,92 +654,77 @@
 
               {step === 2 && (
                 <div>
-                  <label style={{
-                    fontFamily: '"Gaegu", cursive',
-                    fontSize: '16px',
-                    color: '#9370db',
-                    marginBottom: '8px',
-                    display: 'block',
-                  }}>생년월일</label>
-                  <input
-                    type="date"
-                    value={localData.birthDate}
-                    onChange={(e) => setLocalData({ ...localData, birthDate: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '16px',
-                      fontSize: '18px',
-                      fontFamily: '"Gaegu", cursive',
-                      background: 'rgba(255,255,255,0.1)',
-                      border: '2px dashed #9370db',
-                      borderRadius: '12px',
-                      color: '#f5e6d3',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
-                  />
+                  <label style={{ fontSize: '15px', color: '#a78bfa', marginBottom: '12px', display: 'block' }}>생년월일</label>
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
+                    <div style={{ flex: 2 }}>
+                      <NumberInput
+                        value={localData.birthYear}
+                        onChange={(val) => setLocalData({ ...localData, birthYear: val })}
+                        placeholder="1990"
+                        maxLength={4}
+                      />
+                      <div style={{ fontSize: '12px', color: '#64748b', textAlign: 'center', marginTop: '6px' }}>년</div>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <NumberInput
+                        value={localData.birthMonth}
+                        onChange={(val) => setLocalData({ ...localData, birthMonth: val })}
+                        placeholder="01"
+                        maxLength={2}
+                        max={12}
+                      />
+                      <div style={{ fontSize: '12px', color: '#64748b', textAlign: 'center', marginTop: '6px' }}>월</div>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <NumberInput
+                        value={localData.birthDay}
+                        onChange={(val) => setLocalData({ ...localData, birthDay: val })}
+                        placeholder="01"
+                        maxLength={2}
+                        max={31}
+                      />
+                      <div style={{ fontSize: '12px', color: '#64748b', textAlign: 'center', marginTop: '6px' }}>일</div>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {step === 3 && (
                 <div>
-                  <label style={{
-                    fontFamily: '"Gaegu", cursive',
-                    fontSize: '16px',
-                    color: '#9370db',
-                    marginBottom: '8px',
-                    display: 'block',
-                  }}>태어난 시간</label>
-                  <input
-                    type="time"
-                    value={localData.birthTime}
-                    onChange={(e) => setLocalData({ ...localData, birthTime: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '16px',
-                      fontSize: '18px',
-                      fontFamily: '"Gaegu", cursive',
-                      background: 'rgba(255,255,255,0.1)',
-                      border: '2px dashed #9370db',
-                      borderRadius: '12px',
-                      color: '#f5e6d3',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                  <p style={{
-                    fontFamily: '"Gaegu", cursive',
-                    fontSize: '14px',
-                    color: '#666',
-                    marginTop: '8px',
-                  }}>
+                  <label style={{ fontSize: '15px', color: '#a78bfa', marginBottom: '12px', display: 'block' }}>태어난 시간 (선택)</label>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '100px' }}>
+                      <NumberInput
+                        value={localData.birthHour}
+                        onChange={(val) => setLocalData({ ...localData, birthHour: val })}
+                        placeholder="00"
+                        maxLength={2}
+                        max={23}
+                      />
+                    </div>
+                    <span style={{ fontSize: '20px', color: '#64748b' }}>시</span>
+                  </div>
+                  <p style={{ fontSize: '13px', color: '#64748b', marginTop: '16px', textAlign: 'center' }}>
                     * 모르면 비워둬도 돼
                   </p>
                 </div>
               )}
             </div>
 
-            {/* 다음 버튼 */}
             <button
               onClick={handleNext}
-              disabled={
-                (step === 1 && !localData.name) ||
-                (step === 2 && !localData.birthDate)
-              }
+              disabled={!canProceed()}
               style={{
-                fontFamily: '"Gaegu", cursive',
-                fontSize: '20px',
-                padding: '16px',
-                background: (step === 1 && !localData.name) || (step === 2 && !localData.birthDate)
-                  ? '#333'
-                  : 'linear-gradient(135deg, #9370db 0%, #4a0080 100%)',
+                fontSize: '18px',
+                padding: '18px',
+                background: canProceed() ? 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)' : 'rgba(100,100,100,0.3)',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '16px',
-                cursor: (step === 1 && !localData.name) || (step === 2 && !localData.birthDate)
-                  ? 'not-allowed'
-                  : 'pointer',
-                transition: 'all 0.2s',
+                cursor: canProceed() ? 'pointer' : 'not-allowed',
+                fontFamily: '"Gaegu", cursive',
+                fontWeight: '700',
+                marginBottom: 'env(safe-area-inset-bottom)',
               }}
             >
               {step === 3 ? '운세 보기 ✨' : '다음'}
@@ -696,13 +733,13 @@
         );
       };
 
-      // 메인 화면 (오늘의 운세)
+      // 메인 화면
       const MainScreen = () => (
         <div style={{
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
+          background: 'linear-gradient(180deg, #13102a 0%, #1e1b4b 100%)',
         }}>
           {/* 헤더 */}
           <div style={{
@@ -710,28 +747,30 @@
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '16px 20px',
+            paddingTop: 'max(16px, env(safe-area-inset-top))',
           }}>
-            <div style={{
-              fontFamily: '"Gaegu", cursive',
-              fontSize: '24px',
-              color: '#f5e6d3',
-            }}>
-              묘운 🌙
+            <div style={{ fontSize: '22px', color: '#f5f5f5', fontWeight: '700' }}>
+              묘운 <span style={{ fontSize: '18px' }}>🌙</span>
             </div>
             <button
               onClick={() => setShowMyPage(true)}
               style={{
-                background: 'none',
-                border: 'none',
-                fontSize: '24px',
+                background: 'rgba(139, 92, 246, 0.2)',
+                border: '1px solid rgba(139, 92, 246, 0.3)',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                fontSize: '18px',
                 cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
               👤
             </button>
           </div>
 
-          {/* 로딩 중 */}
           {isLoading ? (
             <div style={{
               flex: 1,
@@ -741,89 +780,50 @@
               justifyContent: 'center',
               padding: '20px',
             }}>
-              <div style={{
-                animation: 'float 2s ease-in-out infinite',
-              }}>
-                <MeowunCat size={120} />
+              <div style={{ animation: 'float 2s ease-in-out infinite' }}>
+                <MeowunCat size={140} />
               </div>
               <div style={{
-                fontFamily: '"Gaegu", cursive',
                 fontSize: '20px',
-                color: '#f5e6d3',
+                color: '#f5f5f5',
                 marginTop: '24px',
                 textAlign: 'center',
-                lineHeight: 1.6,
+                lineHeight: 1.7,
               }}>
                 우주를 읽고 있어...<br />잠깐만 기다려.
               </div>
-              <div style={{
-                fontFamily: '"Gaegu", cursive',
-                fontSize: '14px',
-                color: '#9370db',
-                marginTop: '12px',
-              }}>
+              <div style={{ fontSize: '24px', color: '#a78bfa', marginTop: '16px', animation: 'pulse 1.5s infinite' }}>
                 🌟 ✨ 🌙
               </div>
             </div>
           ) : todayFortune ? (
-            /* 스크롤 영역 */
-            <div style={{
-              flex: 1,
-              overflowY: 'auto',
-              padding: '0 20px 20px',
-            }}>
-              {/* 인사 */}
-              <div style={{
-                fontFamily: '"Gaegu", cursive',
-                fontSize: '16px',
-                color: '#9370db',
-                marginBottom: '8px',
-              }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px' }}>
+              {/* 날짜 & 인사 */}
+              <div style={{ fontSize: '14px', color: '#a78bfa', marginBottom: '6px' }}>
                 {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })}
               </div>
-              <div style={{
-                fontFamily: '"Gaegu", cursive',
-                fontSize: '24px',
-                color: '#f5e6d3',
-                marginBottom: '24px',
-              }}>
-                {userData.name || '친구'}야, 오늘의 운세야.
+              <div style={{ fontSize: '22px', color: '#f5f5f5', marginBottom: '20px', fontWeight: '700' }}>
+                {userData.name}, 오늘의 운세야 ✨
               </div>
 
               {/* 메인 운세 카드 */}
               <div style={{
-                background: 'rgba(147, 112, 219, 0.15)',
-                border: '2px dashed rgba(147, 112, 219, 0.5)',
-                borderRadius: '20px',
+                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(109, 40, 217, 0.2) 100%)',
+                border: '1px solid rgba(139, 92, 246, 0.3)',
+                borderRadius: '24px',
                 padding: '24px',
-                marginBottom: '20px',
+                marginBottom: '16px',
                 position: 'relative',
               }}>
-                {/* 고양이 */}
-                <div style={{
-                  position: 'absolute',
-                  top: '-35px',
-                  right: '10px',
-                  transform: 'rotate(10deg)',
-                }}>
-                  <MeowunCat size={70} />
+                <div style={{ position: 'absolute', top: '-30px', right: '16px' }}>
+                  <MeowunCat size={65} />
                 </div>
 
-                <div style={{
-                  fontFamily: '"Gaegu", cursive',
-                  fontSize: '14px',
-                  color: '#9370db',
-                  marginBottom: '8px',
-                }}>
-                  오늘의 총운
-                </div>
-                
+                <div style={{ fontSize: '13px', color: '#a78bfa', marginBottom: '8px', fontWeight: '700' }}>오늘의 총운</div>
                 <StarRating rating={todayFortune.overall} />
-                
                 <div style={{
-                  fontFamily: '"Gaegu", cursive',
-                  fontSize: '20px',
-                  color: '#f5e6d3',
+                  fontSize: '18px',
+                  color: '#f5f5f5',
                   marginTop: '16px',
                   lineHeight: 1.8,
                   whiteSpace: 'pre-line',
@@ -832,13 +832,8 @@
                 </div>
               </div>
 
-              {/* 세부 운세 - 별점과 한줄 문구 함께 */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
+              {/* 세부 운세 */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                 {[
                   { key: 'love', emoji: '💕', label: '연애운', rating: todayFortune.love },
                   { key: 'money', emoji: '💰', label: '금전운', rating: todayFortune.money },
@@ -846,58 +841,35 @@
                   { key: 'work', emoji: '💼', label: '직장운', rating: todayFortune.work },
                 ].map(item => (
                   <div key={item.key} style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(147, 112, 219, 0.3)',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(139, 92, 246, 0.2)',
                     borderRadius: '16px',
                     padding: '16px',
                   }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      marginBottom: '8px',
-                    }}>
-                      <span style={{ fontSize: '20px' }}>{item.emoji}</span>
-                      <span style={{
-                        fontFamily: '"Gaegu", cursive',
-                        fontSize: '14px',
-                        color: '#9370db',
-                      }}>{item.label}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '18px' }}>{item.emoji}</span>
+                      <span style={{ fontSize: '13px', color: '#a78bfa', fontWeight: '700' }}>{item.label}</span>
                     </div>
-                    <StarRating rating={item.rating} />
-                    <div style={{
-                      fontFamily: '"Gaegu", cursive',
-                      fontSize: '14px',
-                      color: '#f5e6d3',
-                      marginTop: '10px',
-                      lineHeight: 1.5,
-                    }}>
+                    <StarRating rating={item.rating} size="small" />
+                    <div style={{ fontSize: '13px', color: '#e2e8f0', marginTop: '10px', lineHeight: 1.5 }}>
                       {todayFortune.detail[item.key]}
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* 행운 아이템 & 색상 */}
+              {/* 행운 아이템 */}
               <div style={{
-                background: 'rgba(255, 215, 0, 0.1)',
-                border: '1px solid rgba(255, 215, 0, 0.3)',
+                background: 'linear-gradient(135deg, rgba(250, 204, 21, 0.1) 0%, rgba(234, 179, 8, 0.1) 100%)',
+                border: '1px solid rgba(250, 204, 21, 0.3)',
                 borderRadius: '16px',
                 padding: '16px',
-                marginBottom: '20px',
+                marginBottom: '16px',
               }}>
-                <div style={{
-                  fontFamily: '"Gaegu", cursive',
-                  fontSize: '16px',
-                  color: '#ffd700',
-                  marginBottom: '12px',
-                }}>
+                <div style={{ fontSize: '14px', color: '#fde047', marginBottom: '12px', fontWeight: '700' }}>
                   ✨ 오늘의 행운
                 </div>
-                <div style={{
-                  display: 'flex',
-                  gap: '12px',
-                }}>
+                <div style={{ display: 'flex', gap: '12px' }}>
                   <div style={{
                     flex: 1,
                     background: 'rgba(0,0,0,0.2)',
@@ -905,18 +877,9 @@
                     padding: '12px',
                     textAlign: 'center',
                   }}>
-                    <div style={{ fontSize: '24px', marginBottom: '4px' }}>🍀</div>
-                    <div style={{
-                      fontFamily: '"Gaegu", cursive',
-                      fontSize: '12px',
-                      color: '#9370db',
-                      marginBottom: '4px',
-                    }}>행운 아이템</div>
-                    <div style={{
-                      fontFamily: '"Gaegu", cursive',
-                      fontSize: '14px',
-                      color: '#f5e6d3',
-                    }}>{todayFortune.luckyItem}</div>
+                    <div style={{ fontSize: '22px', marginBottom: '4px' }}>🍀</div>
+                    <div style={{ fontSize: '11px', color: '#a78bfa', marginBottom: '4px' }}>행운 아이템</div>
+                    <div style={{ fontSize: '14px', color: '#f5f5f5', fontWeight: '700' }}>{todayFortune.luckyItem}</div>
                   </div>
                   <div style={{
                     flex: 1,
@@ -925,49 +888,10 @@
                     padding: '12px',
                     textAlign: 'center',
                   }}>
-                    <div style={{ fontSize: '24px', marginBottom: '4px' }}>🎨</div>
-                    <div style={{
-                      fontFamily: '"Gaegu", cursive',
-                      fontSize: '12px',
-                      color: '#9370db',
-                      marginBottom: '4px',
-                    }}>행운 색상</div>
-                    <div style={{
-                      fontFamily: '"Gaegu", cursive',
-                      fontSize: '14px',
-                      color: '#f5e6d3',
-                    }}>{todayFortune.luckyColor}</div>
+                    <div style={{ fontSize: '22px', marginBottom: '4px' }}>🎨</div>
+                    <div style={{ fontSize: '11px', color: '#a78bfa', marginBottom: '4px' }}>행운 색상</div>
+                    <div style={{ fontSize: '14px', color: '#f5f5f5', fontWeight: '700' }}>{todayFortune.luckyColor}</div>
                   </div>
-                </div>
-              </div>
-
-              {/* 묘운이의 한마디 */}
-              <div style={{
-                background: 'rgba(74, 0, 128, 0.3)',
-                borderRadius: '16px',
-                padding: '20px',
-                marginBottom: '20px',
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '12px',
-                }}>
-                  <MeowunCat size={32} />
-                  <span style={{
-                    fontFamily: '"Gaegu", cursive',
-                    fontSize: '16px',
-                    color: '#9370db',
-                  }}>묘운이의 한마디</span>
-                </div>
-                <div style={{
-                  fontFamily: '"Gaegu", cursive',
-                  fontSize: '18px',
-                  color: '#f5e6d3',
-                  lineHeight: 1.8,
-                }}>
-                  "오늘 하루도 잘 버텨. 내가 지켜보고 있을게... 아마도."
                 </div>
               </div>
 
@@ -976,42 +900,41 @@
                 onClick={() => setShowShareCard(true)}
                 style={{
                   width: '100%',
-                  fontFamily: '"Gaegu", cursive',
-                  fontSize: '18px',
+                  fontSize: '17px',
                   padding: '16px',
-                  background: 'linear-gradient(135deg, #9370db 0%, #4a0080 100%)',
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
                   color: '#fff',
                   border: 'none',
                   borderRadius: '16px',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
+                  fontFamily: '"Gaegu", cursive',
+                  fontWeight: '700',
+                  marginBottom: '16px',
                 }}
               >
-                <span>친구에게 공유하기</span>
-                <span>📤</span>
+                친구에게 공유하기 📤
               </button>
             </div>
           ) : null}
 
-          {/* 하단 광고 배너 */}
+          {/* 광고 배너 - 쿠팡파트너스 */}
           <div style={{
-            height: '60px',
+            padding: '12px 20px',
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
             background: 'rgba(0,0,0,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderTop: '1px solid rgba(147, 112, 219, 0.2)',
+            borderTop: '1px solid rgba(139, 92, 246, 0.2)',
           }}>
-            <span style={{
-              fontFamily: '"Gaegu", cursive',
-              fontSize: '14px',
-              color: '#666',
-            }}>
-              📢 광고 배너 영역
-            </span>
+            <div 
+              id="coupang-banner"
+              style={{
+                borderRadius: '12px',
+                overflow: 'hidden',
+                minHeight: '140px',
+              }}
+            />
+            <div style={{ fontSize: '10px', color: '#64748b', textAlign: 'center', marginTop: '6px' }}>
+              이 배너는 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공 받습니다
+            </div>
           </div>
         </div>
       );
@@ -1021,7 +944,7 @@
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0,0,0,0.8)',
+          background: 'rgba(0,0,0,0.85)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -1030,155 +953,98 @@
           zIndex: 100,
         }}>
           {/* 공유 카드 */}
-          <div style={{
-            width: '100%',
-            maxWidth: '320px',
-            background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f23 100%)',
-            borderRadius: '24px',
-            padding: '32px 24px',
-            border: '2px solid rgba(147, 112, 219, 0.5)',
-            position: 'relative',
-            marginBottom: '20px',
-          }}>
-            {/* 별 장식 */}
-            <div style={{
-              position: 'absolute',
-              top: '16px',
-              left: '16px',
-              fontSize: '20px',
-            }}>✨</div>
-            <div style={{
-              position: 'absolute',
-              top: '16px',
-              right: '16px',
-              fontSize: '20px',
-            }}>🌙</div>
-
-            {/* 로고 */}
-            <div style={{
-              textAlign: 'center',
+          <div 
+            ref={shareCardRef}
+            style={{
+              width: '100%',
+              maxWidth: '300px',
+              background: 'linear-gradient(180deg, #1e1b4b 0%, #13102a 100%)',
+              borderRadius: '24px',
+              padding: '28px 24px',
+              border: '2px solid rgba(139, 92, 246, 0.4)',
               marginBottom: '20px',
-            }}>
-              <div style={{
-                fontFamily: '"Gaegu", cursive',
-                fontSize: '28px',
-                color: '#f5e6d3',
-              }}>묘운</div>
-              <div style={{
-                fontFamily: '"Gaegu", cursive',
-                fontSize: '12px',
-                color: '#9370db',
-                letterSpacing: '4px',
-              }}>MEOWUN</div>
+            }}
+          >
+            <div style={{ position: 'absolute', top: '12px', left: '12px', fontSize: '16px' }}>✨</div>
+            <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '16px' }}>🌙</div>
+
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <div style={{ fontSize: '28px', color: '#f5f5f5', fontWeight: '700' }}>묘운</div>
+              <div style={{ fontSize: '11px', color: '#a78bfa', letterSpacing: '4px' }}>MEOWUN</div>
             </div>
 
-            {/* 고양이 */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginBottom: '16px',
-            }}>
-              <MeowunCat size={90} />
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <MeowunCat size={80} />
             </div>
 
-            {/* 메시지 */}
             <div style={{
-              fontFamily: '"Gaegu", cursive',
-              fontSize: '20px',
-              color: '#f5e6d3',
+              fontSize: '17px',
+              color: '#f5f5f5',
               textAlign: 'center',
               lineHeight: 1.8,
-              marginBottom: '20px',
+              marginBottom: '16px',
               whiteSpace: 'pre-line',
             }}>
-              "{todayFortune.message}"
+              "{todayFortune?.message}"
             </div>
 
-            {/* 별점 */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginBottom: '16px',
-            }}>
-              <StarRating rating={todayFortune.overall} />
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+              <StarRating rating={todayFortune?.overall || 0} />
             </div>
 
-            {/* 날짜와 이름 */}
-            <div style={{
-              fontFamily: '"Gaegu", cursive',
-              fontSize: '14px',
-              color: '#666',
-              textAlign: 'center',
-            }}>
-              {new Date().toLocaleDateString('ko-KR')} | {userData.name || '친구'}
+            <div style={{ fontSize: '12px', color: '#64748b', textAlign: 'center' }}>
+              {new Date().toLocaleDateString('ko-KR')} | {userData.name}
             </div>
           </div>
 
           {/* 버튼들 */}
-          <div style={{
-            display: 'flex',
-            gap: '12px',
-            width: '100%',
-            maxWidth: '320px',
-          }}>
+          <div style={{ display: 'flex', gap: '12px', width: '100%', maxWidth: '300px' }}>
             <button
+              onClick={saveAsImage}
               style={{
                 flex: 1,
-                fontFamily: '"Gaegu", cursive',
-                fontSize: '16px',
+                fontSize: '15px',
                 padding: '14px',
                 background: 'rgba(255,255,255,0.1)',
                 color: '#fff',
                 border: '1px solid rgba(255,255,255,0.2)',
                 borderRadius: '12px',
                 cursor: 'pointer',
+                fontFamily: '"Gaegu", cursive',
+                fontWeight: '700',
               }}
             >
               📥 저장
             </button>
             <button
+              onClick={shareToKakao}
               style={{
                 flex: 1,
-                fontFamily: '"Gaegu", cursive',
-                fontSize: '16px',
+                fontSize: '15px',
                 padding: '14px',
                 background: '#FEE500',
                 color: '#000',
                 border: 'none',
                 borderRadius: '12px',
                 cursor: 'pointer',
+                fontFamily: '"Gaegu", cursive',
+                fontWeight: '700',
               }}
             >
               💬 카카오톡
             </button>
-            <button
-              style={{
-                flex: 1,
-                fontFamily: '"Gaegu", cursive',
-                fontSize: '16px',
-                padding: '14px',
-                background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '12px',
-                cursor: 'pointer',
-              }}
-            >
-              📷 인스타
-            </button>
           </div>
 
-          {/* 닫기 */}
           <button
             onClick={() => setShowShareCard(false)}
             style={{
               marginTop: '20px',
-              fontFamily: '"Gaegu", cursive',
-              fontSize: '16px',
-              color: '#666',
+              fontSize: '15px',
+              color: '#64748b',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
+              fontFamily: '"Gaegu", cursive',
             }}
           >
             닫기
@@ -1187,135 +1053,214 @@
       );
 
       // 마이페이지 모달
-      const MyPageModal = () => (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.9)',
-          display: 'flex',
-          flexDirection: 'column',
-          zIndex: 100,
-        }}>
-          {/* 헤더 */}
+      const MyPageModal = () => {
+        const [editData, setEditData] = useState({ ...userData });
+
+        return (
           <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'linear-gradient(180deg, #13102a 0%, #1e1b4b 100%)',
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '16px 20px',
-            borderBottom: '1px solid rgba(147, 112, 219, 0.2)',
+            flexDirection: 'column',
+            zIndex: 100,
           }}>
             <div style={{
-              fontFamily: '"Gaegu", cursive',
-              fontSize: '24px',
-              color: '#f5e6d3',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '16px 20px',
+              paddingTop: 'max(16px, env(safe-area-inset-top))',
+              borderBottom: '1px solid rgba(139, 92, 246, 0.2)',
             }}>
-              마이페이지
+              <div style={{ fontSize: '22px', color: '#f5f5f5', fontWeight: '700' }}>마이페이지</div>
+              <button
+                onClick={() => { setShowMyPage(false); setIsEditing(false); }}
+                style={{
+                  fontSize: '15px',
+                  color: '#a78bfa',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: '"Gaegu", cursive',
+                }}
+              >
+                닫기
+              </button>
             </div>
-            <button
-              onClick={() => setShowMyPage(false)}
-              style={{
-                fontFamily: '"Gaegu", cursive',
-                fontSize: '16px',
-                color: '#9370db',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              닫기
-            </button>
-          </div>
 
-          {/* 컨텐츠 */}
-          <div style={{
-            flex: 1,
-            padding: '24px 20px',
-            overflowY: 'auto',
-          }}>
-            {/* 프로필 카드 */}
-            <div style={{
-              background: 'rgba(147, 112, 219, 0.15)',
-              borderRadius: '20px',
-              padding: '24px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                <MeowunCat size={80} />
-              </div>
+            <div style={{ flex: 1, padding: '24px 20px', overflowY: 'auto' }}>
               <div style={{
-                fontFamily: '"Gaegu", cursive',
-                fontSize: '24px',
-                color: '#f5e6d3',
+                background: 'rgba(139, 92, 246, 0.1)',
+                borderRadius: '20px',
+                padding: '24px',
+                marginBottom: '24px',
+                textAlign: 'center',
               }}>
-                {userData.name || '이름 없음'}
-              </div>
-            </div>
-
-            {/* 정보 섹션 */}
-            <div style={{
-              background: 'rgba(255,255,255,0.05)',
-              borderRadius: '16px',
-              overflow: 'hidden',
-            }}>
-              {[
-                { label: '이름', value: userData.name || '-' },
-                { label: '생년월일', value: userData.birthDate || '-' },
-                { label: '태어난 시간', value: userData.birthTime || '모름' },
-              ].map((item, i) => (
-                <div key={i} style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '16px 20px',
-                  borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                }}>
-                  <span style={{
-                    fontFamily: '"Gaegu", cursive',
-                    fontSize: '16px',
-                    color: '#9370db',
-                  }}>{item.label}</span>
-                  <span style={{
-                    fontFamily: '"Gaegu", cursive',
-                    fontSize: '16px',
-                    color: '#f5e6d3',
-                  }}>{item.value}</span>
+                <MeowunCat size={80} />
+                <div style={{ fontSize: '22px', color: '#f5f5f5', marginTop: '12px', fontWeight: '700' }}>
+                  {userData.name}
                 </div>
-              ))}
-            </div>
+              </div>
 
-            {/* 수정 버튼 */}
-            <button style={{
-              width: '100%',
-              marginTop: '16px',
-              fontFamily: '"Gaegu", cursive',
-              fontSize: '16px',
-              padding: '14px',
-              background: 'rgba(147, 112, 219, 0.2)',
-              color: '#9370db',
-              border: '1px dashed #9370db',
-              borderRadius: '12px',
-              cursor: 'pointer',
-            }}>
-              정보 수정하기
-            </button>
+              {isEditing ? (
+                <div style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  borderRadius: '16px',
+                  padding: '20px',
+                }}>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ fontSize: '14px', color: '#a78bfa', marginBottom: '8px', display: 'block' }}>이름</label>
+                    <input
+                      type="text"
+                      value={editData.name}
+                      onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '14px',
+                        fontSize: '16px',
+                        fontFamily: '"Gaegu", cursive',
+                        background: 'rgba(139, 92, 246, 0.1)',
+                        border: '1px solid rgba(139, 92, 246, 0.3)',
+                        borderRadius: '12px',
+                        color: '#f5f5f5',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ fontSize: '14px', color: '#a78bfa', marginBottom: '8px', display: 'block' }}>생년월일</label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <NumberInput
+                        value={editData.birthYear}
+                        onChange={(val) => setEditData({ ...editData, birthYear: val })}
+                        placeholder="년"
+                        maxLength={4}
+                      />
+                      <NumberInput
+                        value={editData.birthMonth}
+                        onChange={(val) => setEditData({ ...editData, birthMonth: val })}
+                        placeholder="월"
+                        maxLength={2}
+                        max={12}
+                      />
+                      <NumberInput
+                        value={editData.birthDay}
+                        onChange={(val) => setEditData({ ...editData, birthDay: val })}
+                        placeholder="일"
+                        maxLength={2}
+                        max={31}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ fontSize: '14px', color: '#a78bfa', marginBottom: '8px', display: 'block' }}>태어난 시간</label>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <div style={{ width: '80px' }}>
+                        <NumberInput
+                          value={editData.birthHour}
+                          onChange={(val) => setEditData({ ...editData, birthHour: val })}
+                          placeholder="시"
+                          maxLength={2}
+                          max={23}
+                        />
+                      </div>
+                      <span style={{ color: '#64748b' }}>시</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      style={{
+                        flex: 1,
+                        padding: '14px',
+                        fontSize: '15px',
+                        background: 'rgba(255,255,255,0.1)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        fontFamily: '"Gaegu", cursive',
+                      }}
+                    >
+                      취소
+                    </button>
+                    <button
+                      onClick={() => handleUpdateUserData(editData)}
+                      style={{
+                        flex: 1,
+                        padding: '14px',
+                        fontSize: '15px',
+                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        fontFamily: '"Gaegu", cursive',
+                        fontWeight: '700',
+                      }}
+                    >
+                      저장
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                }}>
+                  {[
+                    { label: '이름', value: userData.name },
+                    { label: '생년월일', value: `${userData.birthYear}년 ${userData.birthMonth}월 ${userData.birthDay}일` },
+                    { label: '태어난 시간', value: userData.birthHour ? `${userData.birthHour}시` : '미입력' },
+                  ].map((item, i) => (
+                    <div key={i} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '16px 20px',
+                      borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                    }}>
+                      <span style={{ fontSize: '15px', color: '#a78bfa' }}>{item.label}</span>
+                      <span style={{ fontSize: '15px', color: '#f5f5f5' }}>{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!isEditing && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  style={{
+                    width: '100%',
+                    marginTop: '16px',
+                    padding: '14px',
+                    fontSize: '15px',
+                    background: 'rgba(139, 92, 246, 0.15)',
+                    color: '#a78bfa',
+                    border: '1px dashed rgba(139, 92, 246, 0.4)',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontFamily: '"Gaegu", cursive',
+                  }}
+                >
+                  정보 수정하기 ✏️
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      );
+        );
+      };
 
       return (
-        <div style={{
-          width: '100%',
-          height: '100%',
-          background: '#0f0f23',
-          overflow: 'hidden',
-          position: 'relative',
-          fontFamily: 'sans-serif',
-        }}>
+        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
           {screen === 'splash' && <SplashScreen />}
           {screen === 'onboarding' && <OnboardingScreen />}
           {screen === 'main' && <MainScreen />}
-          
           {showShareCard && <ShareCardModal />}
           {showMyPage && <MyPageModal />}
         </div>
@@ -1324,21 +1269,13 @@
 
     ReactDOM.createRoot(document.getElementById('root')).render(<MeowunApp />);
   </script>
-  
-  <!-- 서비스 워커 등록 -->
+
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then((registration) => {
-            console.log('SW registered:', registration);
-          })
-          .catch((error) => {
-            console.log('SW registration failed:', error);
-          });
+        navigator.serviceWorker.register('sw.js').catch(() => {});
       });
     }
   </script>
 </body>
 </html>
-
