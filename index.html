@@ -21,9 +21,6 @@
   <!-- html2canvas (이미지 저장용) -->
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   
-  <!-- 쿠팡파트너스 -->
-  <script src="https://ads-partners.coupang.com/g.js" async></script>
-  
   <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&display=swap" rel="stylesheet">
   
   <style>
@@ -95,14 +92,14 @@
     // 쿠팡파트너스 배너 초기화
     const initCoupangBanner = () => {
       const banner = document.getElementById('coupang-banner');
-      if (banner && window.PartnersCoupang) {
+      if (banner && window.PartnersCoupang && !banner.hasChildNodes()) {
         new window.PartnersCoupang.G({
           id: 800931,
           trackingCode: "AF6702889",
           subId: null,
           template: "carousel",
           width: "100%",
-          height: "140"
+          height: "100"
         });
       }
     };
@@ -919,20 +916,20 @@
 
           {/* 광고 배너 - 쿠팡파트너스 */}
           <div style={{
-            padding: '12px 20px',
-            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+            padding: '8px 16px',
+            paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
             background: 'rgba(0,0,0,0.3)',
             borderTop: '1px solid rgba(139, 92, 246, 0.2)',
           }}>
             <div 
               id="coupang-banner"
               style={{
-                borderRadius: '12px',
+                borderRadius: '8px',
                 overflow: 'hidden',
-                minHeight: '140px',
+                height: '100px',
               }}
             />
-            <div style={{ fontSize: '10px', color: '#64748b', textAlign: 'center', marginTop: '6px' }}>
+            <div style={{ fontSize: '9px', color: '#64748b', textAlign: 'center', marginTop: '4px' }}>
               이 배너는 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공 받습니다
             </div>
           </div>
@@ -1277,5 +1274,41 @@
       });
     }
   </script>
+  
+  <!-- 쿠팡파트너스 배너 스크립트 -->
+  <script src="https://ads-partners.coupang.com/g.js" async></script>
+  <script>
+    // 쿠팡 배너 로드 체크 및 초기화
+    function loadCoupangBanner() {
+      var banner = document.getElementById('coupang-banner');
+      if (banner && window.PartnersCoupang && !banner.hasChildNodes()) {
+        new PartnersCoupang.G({
+          id: 800931,
+          trackingCode: "AF6702889",
+          subId: null,
+          template: "carousel",
+          width: "100%",
+          height: "100"
+        });
+      } else if (banner && !window.PartnersCoupang) {
+        setTimeout(loadCoupangBanner, 500);
+      }
+    }
+    
+    // 페이지 로드 후 배너 초기화 시도
+    window.addEventListener('load', function() {
+      setTimeout(loadCoupangBanner, 1000);
+    });
+    
+    // MutationObserver로 배너 영역 감지
+    var observer = new MutationObserver(function(mutations) {
+      var banner = document.getElementById('coupang-banner');
+      if (banner && !banner.hasChildNodes()) {
+        loadCoupangBanner();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  </script>
 </body>
 </html>
+
