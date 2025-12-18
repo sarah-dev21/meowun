@@ -1,0 +1,18 @@
+{
+  "name": "묘운 MEOWUN",
+  "short_name": "묘운",
+  "description": "까칠한 우주 고양이가 전하는 오늘의 운세",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f23",
+  "theme_color": "#1a1a2e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

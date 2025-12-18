@@ -1,0 +1,78 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e" />
+      <stop offset="100%" stop-color="#0f0f23" />
+    </linearGradient>
+    <linearGradient id="capeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5a1a8a" />
+      <stop offset="100%" stop-color="#2a0a4a" />
+    </linearGradient>
+    <radialGradient id="eyeGold" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#ffe066" />
+      <stop offset="50%" stop-color="#ffc700" />
+      <stop offset="100%" stop-color="#b8960b" />
+    </radialGradient>
+  </defs>
+  
+  <!-- 배경 -->
+  <rect width="512" height="512" rx="100" fill="url(#bgGradient)" />
+  
+  <!-- 별 장식 -->
+  <circle cx="80" cy="80" r="4" fill="#fff" opacity="0.6" />
+  <circle cx="432" cy="100" r="3" fill="#fff" opacity="0.5" />
+  <circle cx="100" cy="420" r="3" fill="#fff" opacity="0.4" />
+  <circle cx="400" cy="400" r="4" fill="#fff" opacity="0.5" />
+  <circle cx="60" cy="250" r="2" fill="#fff" opacity="0.3" />
+  <circle cx="450" cy="280" r="2" fill="#fff" opacity="0.3" />
+  
+  <!-- 고양이 (중앙 배치, 확대) -->
+  <g transform="translate(56, 56) scale(4)">
+    <!-- 망토 -->
+    <ellipse cx="50" cy="75" rx="38" ry="22" fill="url(#capeGradient)" />
+    <path d="M12 65 Q8 75 15 90 Q30 98 50 98 Q70 98 85 90 Q92 75 88 65 Q75 55 50 58 Q25 55 12 65" fill="url(#capeGradient)" />
+    
+    <!-- 망토 별 -->
+    <circle cx="22" cy="78" r="1.5" fill="#ffd700" opacity="0.9" />
+    <circle cx="78" cy="76" r="1.2" fill="#ffd700" opacity="0.8" />
+    <circle cx="30" cy="88" r="1" fill="#ffd700" opacity="0.7" />
+    <circle cx="70" cy="86" r="1.3" fill="#ffd700" opacity="0.8" />
+    
+    <!-- 얼굴 -->
+    <ellipse cx="50" cy="42" rx="32" ry="30" fill="#2a2a2a" />
+    <ellipse cx="50" cy="38" rx="28" ry="24" fill="#1f1f1f" />
+    
+    <!-- 귀 -->
+    <ellipse cx="24" cy="18" rx="10" ry="14" fill="#2a2a2a" />
+    <ellipse cx="24" cy="18" rx="7" ry="10" fill="#1f1f1f" />
+    <ellipse cx="76" cy="18" rx="10" ry="14" fill="#2a2a2a" />
+    <ellipse cx="76" cy="18" rx="7" ry="10" fill="#1f1f1f" />
+    
+    <!-- 눈 -->
+    <ellipse cx="35" cy="40" rx="12" ry="13" fill="url(#eyeGold)" stroke="#8b7500" stroke-width="1.5" />
+    <ellipse cx="35" cy="42" rx="5" ry="7" fill="#1a1a1a" />
+    <ellipse cx="32" cy="37" rx="3" ry="4" fill="#fff" opacity="0.9" />
+    
+    <ellipse cx="65" cy="40" rx="12" ry="13" fill="url(#eyeGold)" stroke="#8b7500" stroke-width="1.5" />
+    <ellipse cx="65" cy="42" rx="5" ry="7" fill="#1a1a1a" />
+    <ellipse cx="62" cy="37" rx="3" ry="4" fill="#fff" opacity="0.9" />
+    
+    <!-- 코 -->
+    <path d="M50 52 L47 56 L53 56 Z" fill="#3d3d3d" />
+    
+    <!-- 입 -->
+    <path d="M50 56 L50 59" fill="none" stroke="#3d3d3d" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M44 61 Q47 58 50 59 Q53 58 56 61" fill="none" stroke="#3d3d3d" stroke-width="1.5" stroke-linecap="round" />
+    
+    <!-- 수염 -->
+    <line x1="8" y1="48" x2="28" y2="52" stroke="#e0e0e0" stroke-width="1.2" stroke-linecap="round" />
+    <line x1="6" y1="54" x2="27" y2="54" stroke="#e0e0e0" stroke-width="1.2" stroke-linecap="round" />
+    <line x1="8" y1="60" x2="28" y2="56" stroke="#e0e0e0" stroke-width="1.2" stroke-linecap="round" />
+    <line x1="92" y1="48" x2="72" y2="52" stroke="#e0e0e0" stroke-width="1.2" stroke-linecap="round" />
+    <line x1="94" y1="54" x2="73" y2="54" stroke="#e0e0e0" stroke-width="1.2" stroke-linecap="round" />
+    <line x1="92" y1="60" x2="72" y2="56" stroke="#e0e0e0" stroke-width="1.2" stroke-linecap="round" />
+    
+    <!-- 브로치 -->
+    <polygon points="50,62 52,67 58,67 53,71 55,77 50,73 45,77 47,71 42,67 48,67" fill="#ffd700" stroke="#b8860b" stroke-width="0.8" />
+  </g>
+</svg>
