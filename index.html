@@ -80,29 +80,14 @@
 </head>
 <body>
   <div id="root"></div>
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect, useRef, useMemo, useCallback, memo } = React;
 
     // 카카오 초기화
     const KAKAO_KEY = 'a8f98dbc00e769be2ba0943380509ac0';
-
-    // 쿠팡파트너스 배너 초기화
-    const initCoupangBanner = () => {
-      const banner = document.getElementById('coupang-banner');
-      if (banner && window.PartnersCoupang && !banner.hasChildNodes()) {
-        new window.PartnersCoupang.G({
-          id: 800931,
-          trackingCode: "AF6702889",
-          subId: null,
-          template: "carousel",
-          width: "100%",
-          height: "100"
-        });
-      }
-    };
 
     // 망토 쓴 검은 고양이 캐릭터 컴포넌트
     const MeowunCat = ({ size = 100, style = {} }) => (
@@ -218,12 +203,7 @@
         }
       }, []);
 
-      // 메인 화면 진입 시 쿠팡 배너 초기화
-      useEffect(() => {
-        if (screen === 'main' && !isLoading) {
-          setTimeout(initCoupangBanner, 500);
-        }
-      }, [screen, isLoading]);
+
 
       const saveUserData = (data) => {
         try {
@@ -346,19 +326,19 @@
         setIsLoading(false);
       };
 
-      const handleOnboardingComplete = async (userInfo) => {
+      const handleOnboardingComplete = useCallback(async (userInfo) => {
         setUserData(userInfo);
         saveUserData(userInfo);
         setScreen('main');
         await fetchFortune(userInfo);
-      };
+      }, []);
 
-      const handleUpdateUserData = async (newData) => {
+      const handleUpdateUserData = useCallback(async (newData) => {
         setUserData(newData);
         saveUserData(newData);
         setIsEditing(false);
         await fetchFortune(newData);
-      };
+      }, []);
 
       // 카카오톡 공유
       const shareToKakao = () => {
@@ -409,8 +389,8 @@
         }
       };
 
-      // 별점 컴포넌트
-      const StarRating = ({ rating, max = 5, size = 'normal' }) => {
+      // 별점 컴포넌트 - memo로 최적화
+      const StarRating = memo(({ rating, max = 5, size = 'normal' }) => {
         const starSize = size === 'small' ? '14px' : '18px';
         return (
           <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
@@ -439,37 +419,24 @@
             </span>
           </div>
         );
-      };
+      });
 
-      // 숫자 입력 컴포넌트
-      const NumberInput = ({ value, onChange, placeholder, maxLength, max }) => (
-        <input
-          type="tel"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          value={value || ''}
-          onChange={(e) => {
-            const val = e.target.value.replace(/[^0-9]/g, '');
-            if (maxLength && val.length > maxLength) return;
-            if (max && val.length > 0 && parseInt(val, 10) > max) return;
-            onChange(val);
-          }}
-          placeholder={placeholder}
-          style={{
-            width: '100%',
-            padding: '16px',
-            fontSize: '18px',
-            fontFamily: '"Gaegu", cursive',
-            background: 'rgba(139, 92, 246, 0.1)',
-            border: '2px solid rgba(139, 92, 246, 0.3)',
-            borderRadius: '16px',
-            color: '#f5f5f5',
-            outline: 'none',
-            textAlign: 'center',
-            WebkitAppearance: 'none',
-          }}
-        />
-      );
+      StarRating.displayName = 'StarRating';
+
+      // 숫자 입력 스타일
+      const inputStyle = {
+        width: '100%',
+        padding: '16px',
+        fontSize: '18px',
+        fontFamily: '"Gaegu", cursive',
+        background: 'rgba(139, 92, 246, 0.1)',
+        border: '2px solid rgba(139, 92, 246, 0.3)',
+        borderRadius: '16px',
+        color: '#f5f5f5',
+        outline: 'none',
+        textAlign: 'center',
+        WebkitAppearance: 'none',
+      };
 
       // 스플래시 화면
       const SplashScreen = () => (
@@ -484,22 +451,31 @@
           overflow: 'hidden',
           padding: '20px',
         }}>
-          {/* 별 배경 */}
-          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-            {[...Array(40)].map((_, i) => (
-              <div key={i} style={{
-                position: 'absolute',
-                width: Math.random() * 3 + 1 + 'px',
-                height: Math.random() * 3 + 1 + 'px',
-                background: i % 3 === 0 ? '#a78bfa' : '#fff',
-                borderRadius: '50%',
-                left: Math.random() * 100 + '%',
-                top: Math.random() * 100 + '%',
-                opacity: Math.random() * 0.7 + 0.3,
-                animation: `twinkle ${Math.random() * 3 + 2}s ease-in-out infinite`,
-              }} />
-            ))}
-          </div>
+          {/* 별 배경 - 메모이제이션으로 최적화 */}
+          {useMemo(() => (
+            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+              {[...Array(40)].map((_, i) => {
+                const size = Math.random() * 3 + 1;
+                const left = Math.random() * 100;
+                const top = Math.random() * 100;
+                const opacity = Math.random() * 0.7 + 0.3;
+                const duration = Math.random() * 3 + 2;
+                return (
+                  <div key={i} style={{
+                    position: 'absolute',
+                    width: size + 'px',
+                    height: size + 'px',
+                    background: i % 3 === 0 ? '#a78bfa' : '#fff',
+                    borderRadius: '50%',
+                    left: left + '%',
+                    top: top + '%',
+                    opacity: opacity,
+                    animation: `twinkle ${duration}s ease-in-out infinite`,
+                  }} />
+                );
+              })}
+            </div>
+          ), [])}
 
           <div style={{ animation: 'float 3s ease-in-out infinite', marginBottom: '24px' }}>
             <MeowunCat size={160} />
@@ -571,6 +547,7 @@
         const canProceed = () => {
           if (step === 1) return localData.name?.length > 0;
           if (step === 2) return localData.birthYear && localData.birthMonth && localData.birthDay;
+          if (step === 3) return true; // 출생시간은 선택사항
           return true;
         };
 
@@ -646,49 +623,71 @@
                   <label style={{ fontSize: '15px', color: '#a78bfa', marginBottom: '12px', display: 'block' }}>생년월일</label>
                   <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
                     <div style={{ flex: 2 }}>
-                      <NumberInput
-                        value={localData.birthYear}
-                        onChange={(val) => setLocalData({ ...localData, birthYear: val })}
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        value={localData.birthYear || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                          setLocalData({ ...localData, birthYear: val });
+                        }}
                         placeholder="1990"
-                        maxLength={4}
+                        style={inputStyle}
                       />
                       <div style={{ fontSize: '12px', color: '#64748b', textAlign: 'center', marginTop: '6px' }}>년</div>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <NumberInput
-                        value={localData.birthMonth}
-                        onChange={(val) => setLocalData({ ...localData, birthMonth: val })}
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        value={localData.birthMonth || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
+                          if (val === '' || parseInt(val, 10) <= 12) {
+                            setLocalData({ ...localData, birthMonth: val });
+                          }
+                        }}
                         placeholder="01"
-                        maxLength={2}
-                        max={12}
+                        style={inputStyle}
                       />
                       <div style={{ fontSize: '12px', color: '#64748b', textAlign: 'center', marginTop: '6px' }}>월</div>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <NumberInput
-                        value={localData.birthDay}
-                        onChange={(val) => setLocalData({ ...localData, birthDay: val })}
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        value={localData.birthDay || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
+                          if (val === '' || parseInt(val, 10) <= 31) {
+                            setLocalData({ ...localData, birthDay: val });
+                          }
+                        }}
                         placeholder="01"
-                        maxLength={2}
-                        max={31}
+                        style={inputStyle}
                       />
                       <div style={{ fontSize: '12px', color: '#64748b', textAlign: 'center', marginTop: '6px' }}>일</div>
                     </div>
                   </div>
                 </div>
               )}
-
-              {step === 3 && (
+{step === 3 && (
                 <div>
                   <label style={{ fontSize: '15px', color: '#a78bfa', marginBottom: '12px', display: 'block' }}>태어난 시간 (선택)</label>
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center' }}>
                     <div style={{ width: '100px' }}>
-                      <NumberInput
-                        value={localData.birthHour}
-                        onChange={(val) => setLocalData({ ...localData, birthHour: val })}
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        value={localData.birthHour || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
+                          if (val === '' || parseInt(val, 10) <= 23) {
+                            setLocalData({ ...localData, birthHour: val });
+                          }
+                        }}
                         placeholder="00"
-                        maxLength={2}
-                        max={23}
+                        style={inputStyle}
                       />
                     </div>
                     <span style={{ fontSize: '20px', color: '#64748b' }}>시</span>
@@ -1128,25 +1127,42 @@
                   <div style={{ marginBottom: '16px' }}>
                     <label style={{ fontSize: '14px', color: '#a78bfa', marginBottom: '8px', display: 'block' }}>생년월일</label>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <NumberInput
-                        value={editData.birthYear}
-                        onChange={(val) => setEditData({ ...editData, birthYear: val })}
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        value={editData.birthYear || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                          setEditData({ ...editData, birthYear: val });
+                        }}
                         placeholder="년"
-                        maxLength={4}
+                        style={inputStyle}
                       />
-                      <NumberInput
-                        value={editData.birthMonth}
-                        onChange={(val) => setEditData({ ...editData, birthMonth: val })}
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        value={editData.birthMonth || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
+                          if (val === '' || parseInt(val, 10) <= 12) {
+                            setEditData({ ...editData, birthMonth: val });
+                          }
+                        }}
                         placeholder="월"
-                        maxLength={2}
-                        max={12}
+                        style={inputStyle}
                       />
-                      <NumberInput
-                        value={editData.birthDay}
-                        onChange={(val) => setEditData({ ...editData, birthDay: val })}
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        value={editData.birthDay || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
+                          if (val === '' || parseInt(val, 10) <= 31) {
+                            setEditData({ ...editData, birthDay: val });
+                          }
+                        }}
                         placeholder="일"
-                        maxLength={2}
-                        max={31}
+                        style={inputStyle}
                       />
                     </div>
                   </div>
@@ -1155,12 +1171,18 @@
                     <label style={{ fontSize: '14px', color: '#a78bfa', marginBottom: '8px', display: 'block' }}>태어난 시간</label>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                       <div style={{ width: '80px' }}>
-                        <NumberInput
-                          value={editData.birthHour}
-                          onChange={(val) => setEditData({ ...editData, birthHour: val })}
+                        <input
+                          type="tel"
+                          inputMode="numeric"
+                          value={editData.birthHour || ''}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
+                            if (val === '' || parseInt(val, 10) <= 23) {
+                              setEditData({ ...editData, birthHour: val });
+                            }
+                          }}
                           placeholder="시"
-                          maxLength={2}
-                          max={23}
+                          style={inputStyle}
                         />
                       </div>
                       <span style={{ color: '#64748b' }}>시</span>
@@ -1275,38 +1297,67 @@
   </script>
   
   <!-- 쿠팡파트너스 배너 스크립트 -->
-  <script src="https://ads-partners.coupang.com/g.js" async></script>
+  <script src="https://ads-partners.coupang.com/g.js"></script>
   <script>
-    // 쿠팡 배너 로드 체크 및 초기화
-    function loadCoupangBanner() {
-      var banner = document.getElementById('coupang-banner');
-      if (banner && window.PartnersCoupang && !banner.hasChildNodes()) {
-        new PartnersCoupang.G({
-          id: 800931,
-          trackingCode: "AF6702889",
-          subId: null,
-          template: "carousel",
-          width: "100%",
-          height: "100"
+    // 쿠팡 배너 초기화 - 동기 로딩 후 즉시 실행
+    (function() {
+      let isInitialized = false; // 초기화 플래그
+      
+      function initCoupangBanner() {
+        if (isInitialized) return; // 이미 초기화되었으면 종료
+        
+        const banner = document.getElementById('coupang-banner');
+        if (banner && !banner.hasChildNodes()) {
+          try {
+            new PartnersCoupang.G({
+              id: 800931,
+              trackingCode: "AF6702889",
+              subId: null,
+              template: "carousel",
+              width: "100%",
+              height: "100"
+            });
+            isInitialized = true; // 초기화 완료 플래그 설정
+            console.log('쿠팡 배너 초기화 성공');
+          } catch (e) {
+            console.error('쿠팡 배너 초기화 실패:', e);
+          }
+        }
+      }
+      
+      // MutationObserver로 배너 영역이 DOM에 추가되는 것을 감지
+      const observer = new MutationObserver(function(mutations) {
+        if (isInitialized) {
+          observer.disconnect(); // 이미 초기화되었으면 observer 중지
+          return;
+        }
+        
+        const banner = document.getElementById('coupang-banner');
+        if (banner && !banner.hasChildNodes()) {
+          initCoupangBanner();
+          if (isInitialized) {
+            observer.disconnect(); // 초기화 성공 후 observer 중지
+          }
+        }
+      });
+      
+      // 페이지 로드 후 observer 시작
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+          if (document.body) {
+            observer.observe(document.body, { childList: true, subtree: true });
+          }
+          // 즉시 한 번 시도
+          setTimeout(initCoupangBanner, 1000);
         });
-      } else if (banner && !window.PartnersCoupang) {
-        setTimeout(loadCoupangBanner, 500);
+      } else {
+        if (document.body) {
+          observer.observe(document.body, { childList: true, subtree: true });
+        }
+        setTimeout(initCoupangBanner, 1000);
       }
-    }
-    
-    // 페이지 로드 후 배너 초기화 시도
-    window.addEventListener('load', function() {
-      setTimeout(loadCoupangBanner, 1000);
-    });
-    
-    // MutationObserver로 배너 영역 감지
-    var observer = new MutationObserver(function(mutations) {
-      var banner = document.getElementById('coupang-banner');
-      if (banner && !banner.hasChildNodes()) {
-        loadCoupangBanner();
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+    })();
   </script>
 </body>
 </html>
+
