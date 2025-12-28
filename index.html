@@ -587,7 +587,7 @@
                 whiteSpace: 'pre-line',
                 flex: 1,
               }}>
-                {step === 1 && "...왔어? 이름이 뭐야?\n별 볼 때 필요하거든."}
+                {step === 1 && "반가워. 이름이 뭐야?\n별 볼 때 필요하거든."}
                 {step === 2 && "생년월일 알려줘.\n사주 보려면 필요해."}
                 {step === 3 && "태어난 시간도 알아?\n모르면 비워둬도 돼."}
               </div>
@@ -686,7 +686,7 @@
                             setLocalData({ ...localData, birthHour: val });
                           }
                         }}
-                        placeholder="00"
+                        placeholder=""
                         style={inputStyle}
                       />
                     </div>
@@ -792,7 +792,7 @@
               </div>
             </div>
           ) : todayFortune ? (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px', paddingBottom: '140px' }}>
               {/* 날짜 & 인사 */}
               <div style={{ fontSize: '14px', color: '#a78bfa', marginBottom: '6px' }}>
                 {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })}
@@ -912,25 +912,34 @@
             </div>
           ) : null}
 
-          {/* 광고 배너 - 쿠팡파트너스 */}
-          <div style={{
-            padding: '8px 16px',
-            paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
-            background: 'rgba(0,0,0,0.3)',
-            borderTop: '1px solid rgba(139, 92, 246, 0.2)',
-          }}>
-            <div 
-              id="coupang-banner"
-              style={{
-                borderRadius: '8px',
-                overflow: 'hidden',
-                height: '100px',
-              }}
-            />
-            <div style={{ fontSize: '9px', color: '#64748b', textAlign: 'center', marginTop: '4px' }}>
-              이 배너는 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공 받습니다
+
+          {/* 광고 배너 - 쿠팡파트너스 - 운세 결과가 있을 때만 표시 */}
+          {!isLoading && todayFortune && (
+            <div style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              padding: '8px 16px',
+              paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+              background: 'rgba(0,0,0,0.3)',
+              borderTop: '1px solid rgba(139, 92, 246, 0.2)',
+              backdropFilter: 'blur(10px)',
+              zIndex: 50,
+            }}>
+              <div 
+                id="coupang-banner"
+                style={{
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  height: '50px',
+                }}
+              />
+              <div style={{ fontSize: '9px', color: '#64748b', textAlign: 'center', marginTop: '4px' }}>
+                이 배너는 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공 받습니다
+              </div>
             </div>
-          </div>
+          )}
         </div>
       );
 
@@ -1181,7 +1190,7 @@
                               setEditData({ ...editData, birthHour: val });
                             }
                           }}
-                          placeholder="시"
+                          placeholder=""
                           style={inputStyle}
                         />
                       </div>
@@ -1299,45 +1308,75 @@
   <!-- 쿠팡파트너스 배너 스크립트 -->
   <script src="https://ads-partners.coupang.com/g.js"></script>
   <script>
-    // 쿠팡 배너 초기화 - 동기 로딩 후 즉시 실행
+    // 쿠팡 배너 초기화 및 이동
     (function() {
-      let isInitialized = false; // 초기화 플래그
+      let isInitialized = false;
+      let isMoved = false;
       
       function initCoupangBanner() {
-        if (isInitialized) return; // 이미 초기화되었으면 종료
+        if (isInitialized) return;
         
-        const banner = document.getElementById('coupang-banner');
-        if (banner && !banner.hasChildNodes()) {
-          try {
-            new PartnersCoupang.G({
-              id: 800931,
-              trackingCode: "AF6702889",
-              subId: null,
-              template: "carousel",
-              width: "100%",
-              height: "100"
-            });
-            isInitialized = true; // 초기화 완료 플래그 설정
-            console.log('쿠팡 배너 초기화 성공');
-          } catch (e) {
-            console.error('쿠팡 배너 초기화 실패:', e);
+        const container = document.getElementById('coupang-banner');
+        if (!container) return;
+        
+        try {
+          // 쿠팡 배너 생성
+          new PartnersCoupang.G({
+            id: 800931,
+            trackingCode: "AF6702889",
+            subId: null,
+            template: "carousel",
+            width: "100%",
+            height: "50"
+          });
+          isInitialized = true;
+          console.log('쿠팡 배너 초기화 성공');
+          
+          // 배너가 생성되면 컨테이너로 이동
+          setTimeout(moveBannerToContainer, 500);
+        } catch (e) {
+          console.error('쿠팡 배너 초기화 실패:', e);
+        }
+      }
+      
+      function moveBannerToContainer() {
+        if (isMoved) return;
+        
+        const container = document.getElementById('coupang-banner');
+        // 쿠팡 배너는 ins 태그로 생성됨
+        const ins = document.querySelector('body > ins');
+        
+        // ins 태그를 찾아서 컨테이너로 이동
+        if (container && ins && ins.parentElement === document.body) {
+          container.appendChild(ins);
+          isMoved = true;
+          console.log('쿠팡 배너 이동 완료');
+        } else if (!isMoved) {
+          // 아직 생성되지 않았으면 다시 시도 (최대 10초)
+          const elapsed = Date.now() - (window._bannerStartTime || (window._bannerStartTime = Date.now()));
+          if (elapsed < 10000) {
+            setTimeout(moveBannerToContainer, 300);
           }
         }
       }
       
-      // MutationObserver로 배너 영역이 DOM에 추가되는 것을 감지
+      // MutationObserver로 배너 컨테이너와 생성된 배너 감지
       const observer = new MutationObserver(function(mutations) {
-        if (isInitialized) {
-          observer.disconnect(); // 이미 초기화되었으면 observer 중지
-          return;
+        const container = document.getElementById('coupang-banner');
+        
+        // 컨테이너가 생성되었고 아직 초기화 안 됐으면 초기화
+        if (container && !isInitialized) {
+          initCoupangBanner();
         }
         
-        const banner = document.getElementById('coupang-banner');
-        if (banner && !banner.hasChildNodes()) {
-          initCoupangBanner();
-          if (isInitialized) {
-            observer.disconnect(); // 초기화 성공 후 observer 중지
-          }
+        // ins 태그가 body에 추가되면 컨테이너로 이동
+        if (!isMoved) {
+          moveBannerToContainer();
+        }
+        
+        // 초기화와 이동이 모두 완료되면 observer 중지
+        if (isInitialized && isMoved) {
+          observer.disconnect();
         }
       });
       
@@ -1347,7 +1386,6 @@
           if (document.body) {
             observer.observe(document.body, { childList: true, subtree: true });
           }
-          // 즉시 한 번 시도
           setTimeout(initCoupangBanner, 1000);
         });
       } else {
